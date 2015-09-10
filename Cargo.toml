@@ -1,0 +1,7 @@
+[package]
+name = "cc-dropbox"
+version = "0.1.0"
+authors = ["malet <malet@gmx.at>"]
+
+[dependencies]
+hyper = "*"
