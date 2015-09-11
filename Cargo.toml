@@ -5,3 +5,4 @@ authors = ["malet <malet@gmx.at>"]
 
 [dependencies]
 hyper = "*"
+yup-oauth2 = "*"
