@@ -6,6 +6,8 @@ use hyper::client::{RequestBuilder, Body};
 use hyper::header::{Headers, Authorization};
 use hyper::status::StatusCode;
 
+use metadata::FileMetaData;
+
 pub struct DBClient {
     hypcli: Client,
     token: String,
@@ -41,6 +43,7 @@ pub struct DBFile<'c> {
     client: &'c Client,
     path: String,
     oauth: Headers,
+    pub lastmsg: Option<FileMetaData>,
 }
 
 impl<'c> DBFile<'c> {
@@ -49,6 +52,7 @@ impl<'c> DBFile<'c> {
             client: client,
             path: path,
             oauth: oauth,
+            lastmsg: None,
         }
     }
 }

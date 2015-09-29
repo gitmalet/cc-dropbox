@@ -1,26 +1,26 @@
 use chrono::{Local, DateTime};
-use serde;
+//use serde;
 
-#[derive(Debug, Eq, Derialize, Deserialize)]
+//#[derive(Debug, Serialize, Deserialize)]
 pub struct FileMetaData {
     //File specific
-    size: String,
-    bytes: usize,
-    rev: String,
-    client_mod_time: DateTime<Local>,
-    last_mod: DateTime<Local>,
+    pub size: String,
+    pub bytes: usize,
+    pub rev: String,
+    pub client_mod_time: DateTime<Local>,
+    pub last_mod: DateTime<Local>,
     //Common
-    icon_name: String,
-    thumbnail: bool,
-    name: String,
-    path: String,
+    pub icon_name: String,
+    pub thumbnail: bool,
+    pub name: String,
+    pub path: String,
 }
 
-#[derive(Debug, Eq, Derialize, Deserialize)]
+//#[derive(Debug, Serialize, Deserialize)]
 pub struct FolderMetaData {
     //Common
-    icon_name: String,
-    thumbnail: bool,
-    name: String,
-    path: String,
+    pub icon_name: String,
+    pub thumbnail: bool,
+    pub name: String,
+    pub path: String,
 }

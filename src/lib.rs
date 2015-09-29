@@ -2,8 +2,11 @@
 #![plugin(serde_macros)]
 
 extern crate hyper;
+extern crate chrono;
+extern crate serde;
 
 pub mod dropbox;
+pub mod metadata;
 
 #[cfg(test)]
 mod tests {
