@@ -5,4 +5,7 @@ authors = ["malet <malet@gmx.at>"]
 
 [dependencies]
 hyper = "*"
-yup-oauth2 = "*"
+chrono = "*"
+serde = "*"
+serde_json = "*"
+serde_macros = "*"

@@ -1,3 +1,6 @@
+#![feature(box_syntax, custom_derive, plugin, append, split_off)]
+#![plugin(serde_macros)]
+
 extern crate hyper;
 
 pub mod dropbox;
