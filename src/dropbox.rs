@@ -5,8 +5,9 @@ use hyper::Client;
 use hyper::client::{RequestBuilder, Body};
 use hyper::header::{Headers, Authorization};
 use hyper::status::StatusCode;
+use serde_json;
 
-use metadata::FileMetaData;
+use metadata::MetaData;
 
 pub struct DBClient {
     hypcli: Client,
@@ -43,7 +44,7 @@ pub struct DBFile<'c> {
     client: &'c Client,
     path: String,
     oauth: Headers,
-    pub lastmsg: Option<FileMetaData>,
+    pub lastmsg: Option<MetaData>,
 }
 
 impl<'c> DBFile<'c> {
@@ -77,7 +78,10 @@ impl<'c> Write for DBFile<'c> {
         };
         let mut body = String::new();
         response.read_to_string(&mut body);
-        //let mut lines = body.lines().map(|s| s.to_string().split(": "));
+        self.lastmsg = match serde_json::from_str(&body) {
+            Ok(o) => o,
+            Err(e) => panic!("Error: {}, String to parse was:\n{}", e, body),
+        };
         Ok(size)
     }
 

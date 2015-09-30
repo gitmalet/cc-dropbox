@@ -5,7 +5,10 @@ authors = ["malet <malet@gmx.at>"]
 
 [dependencies]
 hyper = "*"
-chrono = "*"
 serde = "*"
 serde_json = "*"
 serde_macros = "*"
+
+[dependencies.chrono]
+version = "*"
+features = ["rustc-serialize"]
