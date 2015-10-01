@@ -36,11 +36,11 @@ impl DBClient {
     }
 }
 
-//static FILE: &'static str = "https://content.dropboxapi.com/1/files/auto/";
-//static FILE_PUT: &'static str = "https://content.dropboxapi.com/1/files_put/auto/";
+static FILE: &'static str = "https://content.dropboxapi.com/1/files/auto/";
+static FILE_PUT: &'static str = "https://content.dropboxapi.com/1/files_put/auto/";
 
-static FILE: &'static str = "http://192.168.0.1/";
-static FILE_PUT: &'static str = "http://192.168.0.1/";
+//static FILE: &'static str = "http://192.168.0.1/";
+//static FILE_PUT: &'static str = "http://192.168.0.1/";
 
 pub struct DBFile<'c> {
     client: &'c Client,
