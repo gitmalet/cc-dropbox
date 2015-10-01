@@ -32,12 +32,7 @@ impl DBClient {
     }
 
     pub fn get_file(&self, path: String) -> DBFile {
-        let mut headers = Headers::new();
-        headers.set(Authorization(self.token.clone()));
-        headers.set(
-            ContentType(Mime(TopLevel::Text, SubLevel::Plain, vec![(Attr::Charset, Value::Utf8)]))
-        );
-        DBFile::new(&self.hypcli, path, headers)
+        DBFile::new(&self.hypcli, path, self.token.clone())
     }
 }
 
@@ -47,16 +42,16 @@ static FILE_PUT: &'static str = "https://content.dropboxapi.com/1/files_put/auto
 pub struct DBFile<'c> {
     client: &'c Client,
     path: String,
-    oauth: Headers,
+    token: String,
     pub lastmsg: Option<MetaData>,
 }
 
 impl<'c> DBFile<'c> {
-    fn new(client: &Client, path: String, oauth: Headers) -> DBFile {
+    fn new(client: &Client, path: String, token: String) -> DBFile {
         DBFile {
             client: client,
             path: path,
-            oauth: oauth,
+            token: token,
             lastmsg: None,
         }
     }
@@ -67,15 +62,23 @@ impl<'c> Write for DBFile<'c> {
         let uri = FILE_PUT.to_string() + &self.path;
         let mut req = self.client.put(&uri);
         let size = buf.len();
+
+        let mut headers = Headers::new();
+        headers.set(Authorization(self.token.clone()));
+        headers.set(
+            ContentType(Mime(TopLevel::Text, SubLevel::Plain, vec![(Attr::Charset, Value::Utf8)]))
+        );
+
         let body = Body::BufBody(buf, size);
 
+        req = req.headers(headers);
         req = req.body(body);
-        req = req.headers(self.oauth.clone());
 
         let mut response = match req.send() {
             Ok(o) => o,
             Err(e) => panic!(e),
         };
+
         match response.status {
             StatusCode::Ok => {},
             e @ _ => return Err(Error::new(ErrorKind::Other, format!("{}", e)))
@@ -99,7 +102,10 @@ impl<'c> Read for DBFile<'c> {
         let uri = FILE.to_string() + &self.path;
         let mut req = self.client.get(&uri);
 
-        req = req.headers(self.oauth.clone());
+        let mut headers = Headers::new();
+        headers.set(Authorization(self.token.clone()));
+
+        req = req.headers(headers);
 
         let response = match req.send() {
             Ok(o) => o,
