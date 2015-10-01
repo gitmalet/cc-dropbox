@@ -3,8 +3,9 @@ use std::io;
 use std::io::{Error, ErrorKind};
 use hyper::Client;
 use hyper::client::{RequestBuilder, Body};
-use hyper::header::{Headers, Authorization};
+use hyper::header::{Headers, Authorization, ContentType};
 use hyper::status::StatusCode;
+use hyper::mime::{Mime, TopLevel, SubLevel, Attr, Value};
 use serde_json;
 
 use metadata::MetaData;
@@ -33,6 +34,9 @@ impl DBClient {
     pub fn get_file(&self, path: String) -> DBFile {
         let mut headers = Headers::new();
         headers.set(Authorization(self.token.clone()));
+        headers.set(
+            ContentType(Mime(TopLevel::Text, SubLevel::Plain, vec![(Attr::Charset, Value::Utf8)]))
+        );
         DBFile::new(&self.hypcli, path, headers)
     }
 }
