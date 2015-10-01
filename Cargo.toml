@@ -12,3 +12,7 @@ serde_macros = "*"
 [dependencies.chrono]
 version = "*"
 features = ["rustc-serialize"]
+
+[lib]
+name = "ccdropbox"
+crate-type = ["dylib"]
