@@ -36,8 +36,11 @@ impl DBClient {
     }
 }
 
-static FILE: &'static str = "https://content.dropboxapi.com/1/files/auto/";
-static FILE_PUT: &'static str = "https://content.dropboxapi.com/1/files_put/auto/";
+//static FILE: &'static str = "https://content.dropboxapi.com/1/files/auto/";
+//static FILE_PUT: &'static str = "https://content.dropboxapi.com/1/files_put/auto/";
+
+static FILE: &'static str = "http://192.168.0.1/";
+static FILE_PUT: &'static str = "http://192.168.0.1/";
 
 pub struct DBFile<'c> {
     client: &'c Client,
@@ -76,7 +79,7 @@ impl<'c> Write for DBFile<'c> {
 
         let mut response = match req.send() {
             Ok(o) => o,
-            Err(e) => panic!(e),
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
         };
 
         match response.status {
@@ -87,7 +90,9 @@ impl<'c> Write for DBFile<'c> {
         response.read_to_string(&mut body);
         self.lastmsg = match serde_json::from_str(&body) {
             Ok(o) => o,
-            Err(e) => panic!("Error: {}, String to parse was:\n{}", e, body),
+            Err(e) => return Err(Error::new(ErrorKind::Other,
+                format!("Error on parsing response: {}, String to parse was:\n{}", e, body
+            ))),
         };
         Ok(size)
     }
@@ -109,7 +114,7 @@ impl<'c> Read for DBFile<'c> {
 
         let response = match req.send() {
             Ok(o) => o,
-            Err(e) => panic!(e),
+            Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
         };
         match response.status {
             StatusCode::Ok => Ok(0usize),
