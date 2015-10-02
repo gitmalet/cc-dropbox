@@ -5,6 +5,7 @@ authors = ["malet <malet@gmx.at>"]
 
 [dependencies]
 hyper = "*"
+url = "*"
 serde = "*"
 serde_json = "*"
 serde_macros = "*"

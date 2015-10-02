@@ -2,10 +2,12 @@ use std::io::prelude::*;
 use std::io;
 use std::io::{Error, ErrorKind};
 use hyper::Client;
+use hyper::error::Result;
 use hyper::client::{RequestBuilder, Body};
 use hyper::header::{Headers, Authorization, ContentType};
 use hyper::status::StatusCode;
 use hyper::mime::{Mime, TopLevel, SubLevel, Attr, Value};
+use url::form_urlencoded;
 use serde_json;
 
 use metadata::MetaData;
@@ -13,23 +15,29 @@ use metadata::MetaData;
 pub struct DBClient {
     hypcli: Client,
     token: String,
+    client_key: String,
+    client_secret: String,
 }
 
 static AUTHORIZE: &'static str = "https://www.dropbox.com/1/oauth2/authorize?response_type=code&client_id=";
 static TOKEN: &'static str = "https://api.dropboxapi.com/1/oauth2/token";
 
 impl DBClient {
-    pub fn new() -> DBClient {
+    pub fn new(client_key: String, client_secret: String) -> DBClient {
         DBClient {
             hypcli: Client::new(),
+            client_key: client_key,
+            client_secret: client_secret,
             token: String::new(),
         }
 
     }
 
-    pub fn new_with_token(token: String) -> DBClient {
+    pub fn new_with_token(client_key: String, client_secret: String, token: String) -> DBClient {
         DBClient {
             hypcli: Client::new(),
+            client_key: client_key,
+            client_secret: client_secret,
             token: token,
         }
     }
@@ -42,13 +50,19 @@ impl DBClient {
         format!("{}{}", AUTHORIZE, secret)
     }
 
-    pub fn setToken(&mut self, code: &str) {
-        let mut req = self.hypcli.post(TOKEN);
+    pub fn setToken(&mut self, code: &str) -> Result<String>{
+        let body = form_urlencoded::serialize(
+            vec![("code", code), ("grant_type", "authorization_code"),
+            ("client_id", &self.client_key), ("client_secret", &self.client_secret)].into_iter());
 
-        let params = "";
+        let mut response = try!(self.hypcli.post(TOKEN)
+            .body(&body).send());
+
+        //TODO: extract Token from response
         let token = "";
 
         self.token = String::from("Bearer ") + token;
+        Ok(self.token.clone())
     }
 }
 

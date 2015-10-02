@@ -2,6 +2,7 @@
 #![plugin(serde_macros)]
 
 extern crate hyper;
+extern crate url;
 extern crate chrono;
 extern crate serde;
 extern crate serde_json;
@@ -18,14 +19,14 @@ mod tests {
 
     #[test]
     fn test_new() {
-        DBClient::new();
+        DBClient::new(String::new(), String::new());
     }
 
     #[test]
     fn test_sample_file_put() {
         let f = b"Hello world!";
         let token = include_str!("oauth_token").to_string();
-        let dbc = DBClient::new_with_token(token);
+        let dbc = DBClient::new_with_token(String::new(), String::new(), token);
         let mut dbf = dbc.get_file("test1.txt".to_string());
         dbf.write_all(f).unwrap();
     }
@@ -34,7 +35,7 @@ mod tests {
     fn test_sample_file_get() {
         let f = b"Hello world!";
         let token = include_str!("oauth_token").to_string();
-        let dbc = DBClient::new_with_token(token);
+        let dbc = DBClient::new_with_token(String::new(), String::new(), token);
         let mut dbf = dbc.get_file("test1.txt".to_string());
         let mut rf: Vec<u8> = Vec::with_capacity(f.len());
         dbf.read_to_end(&mut rf).unwrap();
@@ -47,7 +48,7 @@ mod tests {
     fn test_sample_metadata() {
         let f = b"Hello world!";
         let token = include_str!("oauth_token").to_string();
-        let dbc = DBClient::new_with_token(token);
+        let dbc = DBClient::new_with_token(String::new(), String::new(), token);
         let mut dbf = dbc.get_file("test1.txt".to_string());
         dbf.write_all(f).unwrap();
 
