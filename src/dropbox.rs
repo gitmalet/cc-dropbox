@@ -79,8 +79,8 @@ impl<'c> DBFile<'c> {
 impl<'c> Write for DBFile<'c> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let uri = FILE_PUT.to_string() + &self.path;
-        let mut req = self.client.put(&uri);
         let size = buf.len();
+
 
         let mut headers = Headers::new();
         headers.set(Authorization(self.token.clone()));
@@ -90,9 +90,10 @@ impl<'c> Write for DBFile<'c> {
 
         let body = Body::BufBody(buf, size);
 
-        req = req.headers(headers);
-        req = req.body(body);
+        let mut req = self.client.put(&uri)
+            .headers(headers).body(body);
 
+        try!(req.send());
         let mut response = match req.send() {
             Ok(o) => o,
             Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
@@ -121,12 +122,12 @@ impl<'c> Write for DBFile<'c> {
 impl<'c> Read for DBFile<'c> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let uri = FILE.to_string() + &self.path;
-        let mut req = self.client.get(&uri);
 
         let mut headers = Headers::new();
         headers.set(Authorization(self.token.clone()));
 
-        req = req.headers(headers);
+        let mut req = self.client.get(&uri)
+            .headers(headers);
 
         let response = match req.send() {
             Ok(o) => o,
