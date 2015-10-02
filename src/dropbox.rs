@@ -46,11 +46,11 @@ impl DBClient {
         DBFile::new(&self.hypcli, path, self.token.clone())
     }
 
-    pub fn getAuthorize_url(&self, secret: &str) -> String {
+    pub fn get_authorize_url(&self, secret: &str) -> String {
         format!("{}{}", AUTHORIZE, secret)
     }
 
-    pub fn setToken(&mut self, code: &str) -> Result<String>{
+    pub fn set_token(&mut self, code: &str) -> Result<String>{
         let body = form_urlencoded::serialize(
             vec![("code", code), ("grant_type", "authorization_code"),
             ("client_id", &self.client_key), ("client_secret", &self.client_secret)].into_iter());
@@ -95,17 +95,14 @@ impl<'c> Write for DBFile<'c> {
         let uri = FILE_PUT.to_string() + &self.path;
         let size = buf.len();
 
-
         let mut headers = Headers::new();
         headers.set(Authorization(self.token.clone()));
         headers.set(
             ContentType(Mime(TopLevel::Text, SubLevel::Plain, vec![(Attr::Charset, Value::Utf8)]))
         );
 
-        let body = Body::BufBody(buf, size);
-
         let mut response = match self.client.put(&uri)
-            .headers(headers).body(body).send() {
+            .headers(headers).body(buf).send() {
                 Ok(o) => o,
                 Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
             };
