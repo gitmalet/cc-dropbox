@@ -15,6 +15,9 @@ pub struct DBClient {
     token: String,
 }
 
+static AUTHORIZE: &'static str = "https://www.dropbox.com/1/oauth2/authorize?response_type=code&client_id=";
+static TOKEN: &'static str = "https://api.dropboxapi.com/1/oauth2/token";
+
 impl DBClient {
     pub fn new() -> DBClient {
         DBClient {
@@ -33,6 +36,19 @@ impl DBClient {
 
     pub fn get_file(&self, path: String) -> DBFile {
         DBFile::new(&self.hypcli, path, self.token.clone())
+    }
+
+    pub fn getAuthorize_url(&self, secret: &str) -> String {
+        format!("{}{}", AUTHORIZE, secret)
+    }
+
+    pub fn setToken(&mut self, code: &str) {
+        let mut req = self.hypcli.post(TOKEN);
+
+        let params = "";
+        let token = "";
+
+        self.token = String::from("Bearer ") + token;
     }
 }
 
