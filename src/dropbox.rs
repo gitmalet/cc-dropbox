@@ -90,21 +90,20 @@ impl<'c> Write for DBFile<'c> {
 
         let body = Body::BufBody(buf, size);
 
-        let mut req = self.client.put(&uri)
-            .headers(headers).body(body);
-
-        try!(req.send());
-        let mut response = match req.send() {
-            Ok(o) => o,
-            Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
-        };
+        let mut response = match self.client.put(&uri)
+            .headers(headers).body(body).send() {
+                Ok(o) => o,
+                Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
+            };
 
         match response.status {
             StatusCode::Ok => {},
             e @ _ => return Err(Error::new(ErrorKind::Other, format!("{}", e)))
         };
+
         let mut body = String::new();
-        response.read_to_string(&mut body);
+        try!(response.read_to_string(&mut body));
+
         self.lastmsg = match serde_json::from_str(&body) {
             Ok(o) => o,
             Err(e) => return Err(Error::new(ErrorKind::Other,
@@ -126,13 +125,12 @@ impl<'c> Read for DBFile<'c> {
         let mut headers = Headers::new();
         headers.set(Authorization(self.token.clone()));
 
-        let mut req = self.client.get(&uri)
-            .headers(headers);
+        let mut response = match self.client.get(&uri)
+            .headers(headers).send() {
+                Ok(o) => o,
+                Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
+            };
 
-        let response = match req.send() {
-            Ok(o) => o,
-            Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
-        };
         match response.status {
             StatusCode::Ok => Ok(0usize),
             e @ _ => Err(Error::new(ErrorKind::Other, format!("{}", e)))
