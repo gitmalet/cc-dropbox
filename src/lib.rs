@@ -39,8 +39,11 @@ mod tests {
         let mut dbf = dbc.get_file("test1.txt".to_string());
         let mut rf: Vec<u8> = Vec::with_capacity(f.len());
         dbf.read_to_end(&mut rf).unwrap();
-        for (a, b) in f.iter().zip(rf) {
+/*        for (a, b) in f.iter().zip(rf) {
             assert_eq!(*a, b);
+        }*/
+        for i in 0..f.len() {
+            assert_eq!(f[i], rf[i]);
         }
     }
 
