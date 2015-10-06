@@ -9,6 +9,7 @@ extern crate serde_json;
 
 pub mod dropbox;
 pub mod metadata;
+pub mod error;
 
 #[cfg(test)]
 mod tests {
@@ -20,14 +21,14 @@ mod tests {
 
     #[test]
     fn test_new() {
-        DBClient::new(String::new(), String::new());
+        DBClient::new("", "");
     }
 
     #[test]
     fn test_sample_file_put() {
         let f = b"Hello world!";
         let token = include_str!("oauth_token").to_string();
-        let dbc = DBClient::new_with_token(String::new(), String::new(), token);
+        let dbc = DBClient::new_with_token("", "", token);
         let mut dbf = dbc.get_file("test1.txt".to_string());
         dbf.write_all(f).unwrap();
     }
@@ -36,7 +37,7 @@ mod tests {
     fn test_sample_file_get() {
         let f = b"Hello world!";
         let token = include_str!("oauth_token").to_string();
-        let dbc = DBClient::new_with_token(String::new(), String::new(), token);
+        let dbc = DBClient::new_with_token("", "", token);
         let mut dbf = dbc.get_file("test1.txt".to_string());
         let mut rf: Vec<u8> = Vec::with_capacity(f.len());
         dbf.read_to_end(&mut rf).unwrap();
@@ -52,7 +53,7 @@ mod tests {
     fn test_sample_metadata() {
         let f = b"Hello world!";
         let token = include_str!("oauth_token").to_string();
-        let dbc = DBClient::new_with_token(String::new(), String::new(), token);
+        let dbc = DBClient::new_with_token("", "", token);
         let mut dbf = dbc.get_file("test1.txt".to_string());
         dbf.write_all(f).unwrap();
 
@@ -66,8 +67,8 @@ mod tests {
 
     #[test]
     fn test_oauth2_flow() {
-        let client_id = include_str!("client_id").to_string();
-        let client_secret = include_str!("client_secret").to_string();
+        let client_id = include_str!("client_id");
+        let client_secret = include_str!("client_secret");
         let mut dbc = DBClient::new(client_id, client_secret);
         println!("Go to: {}\nEnter code:",
                  dbc.get_authorize_url());

@@ -1,7 +1,6 @@
 use std::io::prelude::*;
 use std::io;
 use hyper::Client;
-use hyper::error;
 use hyper::client::{RequestBuilder, Body};
 use hyper::header::{Headers, Authorization, ContentType};
 use hyper::status::StatusCode;
@@ -11,6 +10,8 @@ use serde_json;
 
 use metadata::MetaData;
 use metadata::TokenResponse;
+
+use error::DropBoxError;
 
 pub struct DBClient {
     hypcli: Client,
@@ -23,21 +24,21 @@ static AUTHORIZE: &'static str = "https://www.dropbox.com/1/oauth2/authorize?res
 static TOKEN: &'static str = "https://api.dropboxapi.com/1/oauth2/token";
 
 impl DBClient {
-    pub fn new(client_key: String, client_secret: String) -> DBClient {
+    pub fn new(client_key: &str, client_secret: &str) -> DBClient {
         DBClient {
             hypcli: Client::new(),
-            client_key: client_key,
-            client_secret: client_secret,
+            client_key: client_key.trim().to_string(),
+            client_secret: client_secret.trim().to_string(),
             token: String::new(),
         }
 
     }
 
-    pub fn new_with_token(client_key: String, client_secret: String, token: String) -> DBClient {
+    pub fn new_with_token(client_key: &str, client_secret: &str, token: String) -> DBClient {
         DBClient {
             hypcli: Client::new(),
-            client_key: client_key,
-            client_secret: client_secret,
+            client_key: client_key.trim().to_string(),
+            client_secret: client_secret.trim().to_string(),
             token: token,
         }
     }
@@ -50,14 +51,16 @@ impl DBClient {
         format!("{}{}", AUTHORIZE, self.client_key)
     }
 
-    pub fn set_token(&mut self, code: &str) -> error::Result<String>{
+    pub fn set_token(&mut self, code: &str) -> Result<String, DropBoxError>{
         //TODO: Better Error handling
         let body = form_urlencoded::serialize(
-            vec![("code", code), ("grant_type", "authorization_code"),
+            vec![("code", code.trim()), ("grant_type", "authorization_code"),
             ("client_id", &self.client_key), ("client_secret", &self.client_secret)].into_iter());
 
+        let mut headers = Headers::new();
+        headers.set(ContentType::form_url_encoded());
         let mut response = try!(self.hypcli.post(TOKEN)
-            .body(&body).send());
+            .headers(headers).body(&body).send());
 
         //TODO: extract Token from response
         let mut body = String::new();
@@ -65,13 +68,10 @@ impl DBClient {
 
         match response.status {
             StatusCode::Ok => {},
-            e @ _ => return Err(error::Error::from(io::Error::new(io::ErrorKind::Other, format!("{}", e)))),
+            e @ _ => return Err(DropBoxError::APIError(body.clone())),
         };
 
-        let tokenresponse: TokenResponse = match serde_json::from_str(&body) {
-            Ok(o) => o,
-            Err(e) => return Err(error::Error::from(io::Error::new(io::ErrorKind::Other, format!("{}", e)))),
-        };
+        let tokenresponse: TokenResponse = try!(serde_json::from_str(&body));
 
         self.token = String::from("Bearer ") + &tokenresponse.access_token;
         Ok(self.token.clone())
@@ -81,8 +81,8 @@ impl DBClient {
 static FILE: &'static str = "https://content.dropboxapi.com/1/files/auto/";
 static FILE_PUT: &'static str = "https://content.dropboxapi.com/1/files_put/auto/";
 
-//static FILE: &'static str = "http://192.168.0.1/";
-//static FILE_PUT: &'static str = "http://192.168.0.1/";
+//static FILE: &'static str = "http://192.168.0.1/file";
+//static FILE_PUT: &'static str = "http://192.168.0.1/file_put";
 
 pub struct DBFile<'c> {
     client: &'c Client,
