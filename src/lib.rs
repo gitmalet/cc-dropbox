@@ -13,6 +13,7 @@ pub mod metadata;
 #[cfg(test)]
 mod tests {
 
+    use std::io;
     use std::io::{Write, Read};
     use dropbox::DBClient;
     use metadata::MetaData;
@@ -61,6 +62,21 @@ mod tests {
         };
         assert_eq!(&meta.thumb_exists, &false);
         assert_eq!(&meta.bytes, &f.len());
+    }
+
+    #[test]
+    fn test_oauth2_flow() {
+        let client_id = include_str!("client_id").to_string();
+        let client_secret = include_str!("client_secret").to_string();
+        let mut dbc = DBClient::new(client_id, client_secret);
+        println!("Go to: {}\nEnter code:",
+                 dbc.get_authorize_url());
+
+        let mut code = String::new();
+        io::stdin().read_line(&mut code)
+            .ok()
+            .expect("Failed to read code line");
+        println!("Token: {}", dbc.set_token(&code).unwrap());
     }
 }
 

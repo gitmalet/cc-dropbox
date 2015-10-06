@@ -1,3 +1,5 @@
 target
 Cargo.lock
 src/oauth_token
+src/client_id
+src/client_secret

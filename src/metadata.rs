@@ -20,6 +20,13 @@ impl DTWrapper {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct TokenResponse {
+    pub access_token: String,
+    pub token_type: String,
+    pub uid: String
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MetaData {
     //File specific
     pub size: String,

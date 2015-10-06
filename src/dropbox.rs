@@ -1,8 +1,7 @@
 use std::io::prelude::*;
 use std::io;
-use std::io::{Error, ErrorKind};
 use hyper::Client;
-use hyper::error::Result;
+use hyper::error;
 use hyper::client::{RequestBuilder, Body};
 use hyper::header::{Headers, Authorization, ContentType};
 use hyper::status::StatusCode;
@@ -11,6 +10,7 @@ use url::form_urlencoded;
 use serde_json;
 
 use metadata::MetaData;
+use metadata::TokenResponse;
 
 pub struct DBClient {
     hypcli: Client,
@@ -46,11 +46,12 @@ impl DBClient {
         DBFile::new(&self.hypcli, path, self.token.clone())
     }
 
-    pub fn get_authorize_url(&self, secret: &str) -> String {
-        format!("{}{}", AUTHORIZE, secret)
+    pub fn get_authorize_url(&self) -> String {
+        format!("{}{}", AUTHORIZE, self.client_key)
     }
 
-    pub fn set_token(&mut self, code: &str) -> Result<String>{
+    pub fn set_token(&mut self, code: &str) -> error::Result<String>{
+        //TODO: Better Error handling
         let body = form_urlencoded::serialize(
             vec![("code", code), ("grant_type", "authorization_code"),
             ("client_id", &self.client_key), ("client_secret", &self.client_secret)].into_iter());
@@ -59,9 +60,20 @@ impl DBClient {
             .body(&body).send());
 
         //TODO: extract Token from response
-        let token = "";
+        let mut body = String::new();
+        try!(response.read_to_string(&mut body));
 
-        self.token = String::from("Bearer ") + token;
+        match response.status {
+            StatusCode::Ok => {},
+            e @ _ => return Err(error::Error::from(io::Error::new(io::ErrorKind::Other, format!("{}", e)))),
+        };
+
+        let tokenresponse: TokenResponse = match serde_json::from_str(&body) {
+            Ok(o) => o,
+            Err(e) => return Err(error::Error::from(io::Error::new(io::ErrorKind::Other, format!("{}", e)))),
+        };
+
+        self.token = String::from("Bearer ") + &tokenresponse.access_token;
         Ok(self.token.clone())
     }
 }
@@ -104,12 +116,12 @@ impl<'c> Write for DBFile<'c> {
         let mut response = match self.client.put(&uri)
             .headers(headers).body(buf).send() {
                 Ok(o) => o,
-                Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
+                Err(e) => return Err(io::Error::new(io::ErrorKind::Other, format!("{}", e))),
             };
 
         match response.status {
             StatusCode::Ok => {},
-            e @ _ => return Err(Error::new(ErrorKind::Other, format!("{}", e)))
+            e @ _ => return Err(io::Error::new(io::ErrorKind::Other, format!("{}", e)))
         };
 
         let mut body = String::new();
@@ -117,7 +129,7 @@ impl<'c> Write for DBFile<'c> {
 
         self.lastmsg = match serde_json::from_str(&body) {
             Ok(o) => o,
-            Err(e) => return Err(Error::new(ErrorKind::Other,
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other,
                 format!("Error on parsing response: {}, String to parse was:\n{}", e, body
             ))),
         };
@@ -139,12 +151,12 @@ impl<'c> Read for DBFile<'c> {
         let mut response = match self.client.get(&uri)
             .headers(headers).send() {
                 Ok(o) => o,
-                Err(e) => return Err(Error::new(ErrorKind::Other, format!("{}", e))),
+                Err(e) => return Err(io::Error::new(io::ErrorKind::Other, format!("{}", e))),
             };
 
         match response.status {
             StatusCode::Ok => Ok(0usize),
-            e @ _ => Err(Error::new(ErrorKind::Other, format!("{}", e)))
+            e @ _ => Err(io::Error::new(io::ErrorKind::Other, format!("{}", e)))
         }
     }
 }
